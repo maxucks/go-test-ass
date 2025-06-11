@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	com "test/internal/app/common"
 
 	"github.com/go-chi/chi/v5"
@@ -15,13 +16,23 @@ type deleteResponse struct {
 }
 
 func (c *GoodsController) Delete(w http.ResponseWriter, r *http.Request) {
-	projectID := chi.URLParam(r, "projectID")
-	goodsID := chi.URLParam(r, "goodsID")
+	rawProjectID := chi.URLParam(r, "projectID")
+	projectID, err := strconv.Atoi(rawProjectID)
+	if err != nil {
+		com.BadRequest(w, com.WithDetails("projectID is not a number"))
+		return
+	}
 
-	// TODO: Validate
-	// TODO: Check for existance
+	rawGoodsID := chi.URLParam(r, "goodsID")
+	goodsID, err := strconv.Atoi(rawGoodsID)
+	if err != nil {
+		com.BadRequest(w, com.WithDetails("goodsID is not a number"))
+		return
+	}
 
 	fmt.Println(projectID, goodsID)
+
+	// TODO: Check for existance
 
 	com.JSON(w, deleteResponse{
 		Id:         1,

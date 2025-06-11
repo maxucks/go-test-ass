@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	com "test/internal/app/common"
 	"test/internal/app/models"
 
@@ -13,14 +15,22 @@ type createBody struct {
 	Name string `json:"name"`
 }
 
-type createResponse struct {
-	Name string `json:"name"`
-}
-
 func (c *GoodsController) Create(w http.ResponseWriter, r *http.Request) {
-	projectID := chi.URLParam(r, "projectID")
+	rawProjectID := chi.URLParam(r, "projectID")
+	projectID, err := strconv.Atoi(rawProjectID)
+	if err != nil {
+		com.BadRequest(w, com.WithDetails("projectID is not a number"))
+		return
+	}
 
-	fmt.Println(projectID)
+	var body createBody
+
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		com.Error(w, err)
+		return
+	}
+
+	fmt.Println(projectID, body.Name)
 
 	var goods *models.Goods
 

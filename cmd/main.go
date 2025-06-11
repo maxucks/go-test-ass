@@ -1,3 +1,9 @@
 package main
 
-func main() {}
+import (
+	"test/internal/app"
+)
+
+func main() {
+	app.Run()
+}

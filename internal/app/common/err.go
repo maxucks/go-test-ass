@@ -37,19 +37,8 @@ func WithDetails(details any) ExtensionFunc {
 	}
 }
 
-func Internal(extensions ...ExtensionFunc) HttpError {
-	return New(404, "errors.common.internal", 1)
-}
-
-func BadRequest(extensions ...ExtensionFunc) HttpError {
-	return New(400, "errors.common.badRequest", 2)
-}
-
-func NotFound(extensions ...ExtensionFunc) HttpError {
-	return New(404, "errors.common.notFound", 3)
-}
-
 func JSON[T any](w http.ResponseWriter, value T) error {
+	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(value); err != nil {
 		return ToHttpError(err)
 	}
@@ -61,20 +50,44 @@ func Empty(w http.ResponseWriter) error {
 	return nil
 }
 
+func internal(extensions ...ExtensionFunc) HttpError {
+	return New(404, "errors.common.internal", 1, extensions...)
+}
+
+func badRequest(extensions ...ExtensionFunc) HttpError {
+	return New(400, "errors.common.badRequest", 2, extensions...)
+}
+
+func notFound(extensions ...ExtensionFunc) HttpError {
+	return New(404, "errors.common.notFound", 3, extensions...)
+}
+
+func Internal(w http.ResponseWriter, extensions ...ExtensionFunc) {
+	Error(w, internal(extensions...))
+}
+
+func BadRequest(w http.ResponseWriter, extensions ...ExtensionFunc) {
+	Error(w, badRequest(extensions...))
+}
+
+func NotFound(w http.ResponseWriter, extensions ...ExtensionFunc) {
+	Error(w, notFound(extensions...))
+}
+
 func ToHttpError(err error) HttpError {
 	msg := err.Error()
 
 	switch err {
 	case io.EOF:
 		msg = fmt.Sprintf("EOF reading HTTP request body: %v", msg)
-		return BadRequest(WithDetails(msg))
+		return badRequest(WithDetails(msg))
 	case sql.ErrNoRows:
 		msg = fmt.Sprintf("not found: %v", msg)
-		return NotFound(WithDetails(msg))
+		return notFound(WithDetails(msg))
 	}
 
 	msg = fmt.Sprintf("internal server error: %v", msg)
-	return Internal(WithDetails(msg))
+	return internal(WithDetails(msg))
 }
 
 func Error(w http.ResponseWriter, err error) {

@@ -25,11 +25,11 @@ func Setup(cfg *config.Config) *chi.Mux {
 
 	r.Get("/health", Health)
 
-	r.Get("projects/goods", ctrs.goods.List)
-	r.Post("projects/{projectID}/goods", ctrs.goods.Create)
-	r.Patch("projects/{projectID}/goods/{goodsID}", ctrs.goods.Update)
-	r.Delete("projects/{projectID}/goods/{goodsID}", ctrs.goods.Delete)
-	r.Patch("projects/{projectID}/goods/{goodsID}/priority", ctrs.goods.Reprioritize)
+	r.Get("/projects/goods", ctrs.goods.List)
+	r.Post("/projects/{projectID}/goods", ctrs.goods.Create)
+	r.Patch("/projects/{projectID}/goods/{goodsID}", ctrs.goods.Update)
+	r.Delete("/projects/{projectID}/goods/{goodsID}", ctrs.goods.Delete)
+	r.Patch("/projects/{projectID}/goods/{goodsID}/priority", ctrs.goods.Reprioritize)
 
 	return r
 }

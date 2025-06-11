@@ -18,6 +18,8 @@ func Run() {
 	r := router.Setup(cfg)
 
 	addr := fmt.Sprintf(":%d", cfg.Srv.Port)
+	log.Printf("listening at %s", addr)
+
 	if err := http.ListenAndServe(addr, r); err != nil {
 		if !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("failed to start server: %s", err)
