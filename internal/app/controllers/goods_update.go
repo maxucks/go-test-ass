@@ -1,14 +1,18 @@
 package controllers
 
 import (
-	"fmt"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	com "test/internal/app/common"
-	"test/internal/app/models"
 
 	"github.com/go-chi/chi/v5"
 )
+
+type updateBody struct {
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
+}
 
 func (c *GoodsController) Update(w http.ResponseWriter, r *http.Request) {
 	rawProjectID := chi.URLParam(r, "projectID")
@@ -25,11 +29,35 @@ func (c *GoodsController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(projectID, goodsID)
+	var body updateBody
 
-	// TODO: Check for existance
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		com.Error(w, err)
+		return
+	}
 
-	var res *models.Goods
+	if body.Name == "" {
+		com.BadRequest(w, com.WithDetails("name must not be empty"))
+		return
+	}
 
-	com.JSON(w, res)
+	ctx := r.Context()
+
+	exists, err := c.repo.Exists(ctx, goodsID, projectID)
+	if err != nil {
+		com.Error(w, err)
+		return
+	}
+	if !exists {
+		com.NotFound(w)
+		return
+	}
+
+	goods, err := c.repo.Update(r.Context(), goodsID, projectID, body.Name, body.Description)
+	if err != nil {
+		com.Error(w, err)
+		return
+	}
+
+	com.JSON(w, goods)
 }

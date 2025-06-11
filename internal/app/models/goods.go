@@ -2,12 +2,18 @@ package models
 
 type Goods struct {
 	Id          int    `json:"id"`
-	ProjectId   string `json:"projectId"`
+	ProjectId   int    `json:"projectId"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Priority    int    `json:"priority"`
 	Removed     bool   `json:"removed"`
 	CreatedAt   string `json:"createdAt"`
+}
+
+type ShortGoods struct {
+	Id        int    `json:"id"`
+	ProjectId string `json:"projectId"`
+	Removed   bool   `json:"removed"`
 }
 
 type ReprioritizedGoods struct {

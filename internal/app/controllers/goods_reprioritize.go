@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	com "test/internal/app/common"
@@ -41,11 +40,23 @@ func (c *GoodsController) Reprioritize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(projectID, goodsID, body.NewPriority)
+	ctx := r.Context()
 
-	// TODO: Check for existance
+	exists, err := c.repo.Exists(ctx, goodsID, projectID)
+	if err != nil {
+		com.Error(w, err)
+		return
+	}
+	if !exists {
+		com.NotFound(w)
+		return
+	}
 
-	com.JSON(w, reprioritizeResponse{
-		Priorities: []*models.ReprioritizedGoods{},
-	})
+	goods, err := c.repo.UpdatePriority(r.Context(), goodsID, projectID, body.NewPriority)
+	if err != nil {
+		com.Error(w, err)
+		return
+	}
+
+	com.JSON(w, reprioritizeResponse{Priorities: goods})
 }

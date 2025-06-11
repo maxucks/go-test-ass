@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	com "test/internal/app/common"
@@ -10,7 +9,7 @@ import (
 
 type listResponse struct {
 	Meta  models.PaginationMeta `json:"meta"`
-	Goods []models.Goods        `json:"goods"`
+	Goods []*models.Goods       `json:"goods"`
 }
 
 func (c *GoodsController) List(w http.ResponseWriter, r *http.Request) {
@@ -35,15 +34,25 @@ func (c *GoodsController) List(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	fmt.Println(limit, offset)
+	total, removed, err := c.repo.GetPaginationMeta(r.Context())
+	if err != nil {
+		com.Error(w, err)
+		return
+	}
+
+	goods, err := c.repo.Get(r.Context(), limit, offset)
+	if err != nil {
+		com.Error(w, err)
+		return
+	}
 
 	com.JSON(w, listResponse{
 		Meta: models.PaginationMeta{
-			Total:   0,
-			Removed: 0,
-			Limit:   10,
-			Offset:  0,
+			Total:   total,
+			Removed: removed,
+			Limit:   limit,
+			Offset:  offset,
 		},
-		Goods: []models.Goods{},
+		Goods: goods,
 	})
 }

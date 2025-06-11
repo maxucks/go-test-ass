@@ -1,19 +1,12 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	com "test/internal/app/common"
 
 	"github.com/go-chi/chi/v5"
 )
-
-type deleteResponse struct {
-	Id         int  `json:"id"`
-	CampaignId int  `json:"campaignId"`
-	Removed    bool `json:"removed"`
-}
 
 func (c *GoodsController) Delete(w http.ResponseWriter, r *http.Request) {
 	rawProjectID := chi.URLParam(r, "projectID")
@@ -30,13 +23,23 @@ func (c *GoodsController) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(projectID, goodsID)
+	ctx := r.Context()
 
-	// TODO: Check for existance
+	exists, err := c.repo.Exists(ctx, goodsID, projectID)
+	if err != nil {
+		com.Error(w, err)
+		return
+	}
+	if !exists {
+		com.NotFound(w)
+		return
+	}
 
-	com.JSON(w, deleteResponse{
-		Id:         1,
-		CampaignId: 0,
-		Removed:    true,
-	})
+	goods, err := c.repo.Delete(r.Context(), goodsID, projectID)
+	if err != nil {
+		com.Error(w, err)
+		return
+	}
+
+	com.JSON(w, goods)
 }

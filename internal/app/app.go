@@ -1,12 +1,15 @@
 package app
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"test/internal/app/config"
 	"test/internal/app/router"
+
+	_ "github.com/lib/pq"
 )
 
 func Run() {
@@ -15,7 +18,16 @@ func Run() {
 		log.Fatalf("failed to load config: %s", err)
 	}
 
-	r := router.Setup(cfg)
+	db, err := sql.Open("postgres", cfg.DB.URL)
+	if err != nil {
+		log.Fatal("Failed to open DB:", err)
+	}
+
+	if err := db.Ping(); err != nil {
+		log.Fatal("DB ping failed:", err)
+	}
+
+	r := router.Setup(cfg, db)
 
 	addr := fmt.Sprintf(":%d", cfg.Srv.Port)
 	log.Printf("listening at %s", addr)

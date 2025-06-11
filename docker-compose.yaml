@@ -1,0 +1,26 @@
+networks:
+  local:
+    driver: bridge
+
+volumes:
+  pg_main:
+
+services:
+  kub_pg:
+    image: postgres
+    environment:
+      POSTGRES_DB: ${PG_DBNAME}
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      PGPORT: ${PG_PORT}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 1s
+      timeout: 1s
+      retries: 5
+    volumes:
+      - pg_main:/var/lib/postgresql/data
+    ports:
+      - ${PG_PORT}:${PG_PORT}
+    networks:
+      - local

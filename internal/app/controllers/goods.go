@@ -1,7 +1,11 @@
 package controllers
 
-type GoodsController struct{}
+import "test/internal/app/ports"
 
-func NewGoods() *GoodsController {
-	return &GoodsController{}
+type GoodsController struct {
+	repo ports.GoodsRepo
+}
+
+func NewGoods(repo ports.GoodsRepo) *GoodsController {
+	return &GoodsController{repo}
 }

@@ -51,7 +51,7 @@ func Empty(w http.ResponseWriter) error {
 }
 
 func internal(extensions ...ExtensionFunc) HttpError {
-	return New(404, "errors.common.internal", 1, extensions...)
+	return New(500, "errors.common.internal", 1, extensions...)
 }
 
 func badRequest(extensions ...ExtensionFunc) HttpError {

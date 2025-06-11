@@ -2,11 +2,9 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	com "test/internal/app/common"
-	"test/internal/app/models"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -30,9 +28,11 @@ func (c *GoodsController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(projectID, body.Name)
-
-	var goods *models.Goods
+	goods, err := c.repo.Create(r.Context(), projectID, body.Name)
+	if err != nil {
+		com.Error(w, err)
+		return
+	}
 
 	com.JSON(w, goods)
 }

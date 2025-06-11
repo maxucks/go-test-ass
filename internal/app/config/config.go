@@ -5,11 +5,16 @@ import (
 )
 
 type Config struct {
-	Srv Srv `envPrefix:"SRV_"`
+	Srv Srv      `envPrefix:"SRV_"`
+	DB  Database `envPrefix:"PG_"`
 }
 
 type Srv struct {
 	Port int `env:"PORT" envDefault:"8000"`
+}
+
+type Database struct {
+	URL string `env:"URL,notEmpty"`
 }
 
 func Load() (*Config, error) {
