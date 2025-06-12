@@ -15,7 +15,7 @@ const getQuery = `
 		removed, 
 		created_at
 	FROM goods
-	ORDER BY priority DESC
+	ORDER BY priority
 	LIMIT $1 
 	OFFSET $2
 `
