@@ -5,22 +5,32 @@ import (
 	"test/internal/app/models"
 )
 
-const deleteQuery = `
-	DELETE FROM goods 
+const removeQuery = `
+	UPDATE goods
+	SET
+		removed = true
 	WHERE id = $1 AND project_id = $2
-	RETURNING 
+	RETURNING
 		id, 
 		project_id, 
-		removed
+		name, 
+		description, 
+		priority, 
+		removed, 
+		created_at
 `
 
-func (r *Goods) Delete(ctx context.Context, id, projectID int) (*models.ShortGoods, error) {
-	var deleted models.ShortGoods
-	err := r.db.QueryRowContext(ctx, deleteQuery, id, projectID).
+func (r *Goods) Remove(ctx context.Context, id, projectID int) (*models.Goods, error) {
+	var goods models.Goods
+	err := r.db.QueryRowContext(ctx, removeQuery, id, projectID).
 		Scan(
-			&deleted.Id,
-			&deleted.ProjectId,
-			&deleted.Removed,
+			&goods.Id,
+			&goods.ProjectId,
+			&goods.Name,
+			&goods.Description,
+			&goods.Priority,
+			&goods.Removed,
+			&goods.CreatedAt,
 		)
-	return &deleted, err
+	return &goods, err
 }

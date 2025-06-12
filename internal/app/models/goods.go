@@ -11,9 +11,9 @@ type Goods struct {
 }
 
 type ShortGoods struct {
-	Id        int    `json:"id"`
-	ProjectId string `json:"projectId"`
-	Removed   bool   `json:"removed"`
+	Id        int  `json:"id"`
+	ProjectId int  `json:"projectId"`
+	Removed   bool `json:"removed"`
 }
 
 type ReprioritizedGoods struct {

@@ -5,8 +5,9 @@ import (
 )
 
 type Config struct {
-	Srv Srv      `envPrefix:"SRV_"`
-	DB  Database `envPrefix:"PG_"`
+	Srv  Srv      `envPrefix:"SRV_"`
+	DB   Database `envPrefix:"PG_"`
+	Nats Nats     `envPrefix:"NATS_"`
 }
 
 type Srv struct {
@@ -15,6 +16,11 @@ type Srv struct {
 
 type Database struct {
 	URL string `env:"URL,notEmpty"`
+}
+
+type Nats struct {
+	Port       int    `env:"PORT,notEmpty"`
+	GoodsTopic string `env:"GOODS_TOPIC,notEmpty"`
 }
 
 func Load() (*Config, error) {

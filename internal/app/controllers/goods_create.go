@@ -34,5 +34,7 @@ func (c *GoodsController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	c.pub.PublishGoods(goods)
+
 	com.JSON(w, goods)
 }

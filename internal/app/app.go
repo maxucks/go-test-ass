@@ -10,6 +10,7 @@ import (
 	"test/internal/app/router"
 
 	_ "github.com/lib/pq"
+	"github.com/nats-io/nats.go"
 )
 
 func Run() {
@@ -27,7 +28,14 @@ func Run() {
 		log.Fatal("DB ping failed:", err)
 	}
 
-	r := router.Setup(cfg, db)
+	natsURL := fmt.Sprintf("nats://localhost:%d", cfg.Nats.Port)
+	nc, err := nats.Connect(natsURL)
+	if err != nil {
+		log.Fatalf("failed to establish nats connection: %s", err)
+	}
+	defer nc.Drain()
+
+	r := router.Setup(cfg, db, nc, cfg.Nats.GoodsTopic)
 
 	addr := fmt.Sprintf(":%d", cfg.Srv.Port)
 	log.Printf("listening at %s", addr)
