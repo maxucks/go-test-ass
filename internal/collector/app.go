@@ -2,7 +2,6 @@ package collector
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"test/internal/collector/config"
 	"test/internal/collector/services"
@@ -17,16 +16,14 @@ func Run() {
 		log.Fatalf("failed to load config: %s", err)
 	}
 
-	natsURL := fmt.Sprintf("nats://localhost:%d", cfg.NatsPort)
-	nc, err := nats.Connect(natsURL)
+	nc, err := nats.Connect(cfg.NatsURL)
 	if err != nil {
 		log.Fatalf("failed to establish nats connection: %s", err)
 	}
 	defer nc.Drain()
 
-	clickhouseURL := fmt.Sprintf("localhost:%d", cfg.ClickhousePort)
 	clickhouseConn, err := clickhouse.Open(&clickhouse.Options{
-		Addr: []string{clickhouseURL},
+		Addr: []string{cfg.ClickhouseURL},
 		Auth: clickhouse.Auth{
 			Database: cfg.ClickhouseDB,
 			Username: cfg.ClickhouseUser,

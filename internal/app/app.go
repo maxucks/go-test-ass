@@ -30,14 +30,14 @@ func Run() {
 		log.Fatal("DB ping failed:", err)
 	}
 
-	nc, err := nats.Connect(fmt.Sprintf("nats://localhost:%d", cfg.NatsPort))
+	nc, err := nats.Connect(cfg.NatsURL)
 	if err != nil {
 		log.Fatalf("failed to connect to nats: %s", err)
 	}
 	defer nc.Drain()
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("localhost:%d", cfg.RedisPort),
+		Addr:     cfg.RedisURL,
 		Password: "",
 		DB:       0,
 	})

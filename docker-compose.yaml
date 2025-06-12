@@ -9,12 +9,44 @@ volumes:
   redis-data:
 
 services:
-  redis:
-    image: redis:latest
+  app:
+    build:
+      context: .
+      dockerfile: docker/app.dockerfile
+    environment:
+      SRV_PORT: ${SRV_PORT}
+      PG_URL: ${PG_URL}
+      REDIS_URL: ${REDIS_URL}
+      CACHE_EXPIRATION: ${CACHE_EXPIRATION}
+      NATS_URL: ${NATS_URL}
+      NATS_GOODS_TOPIC: ${NATS_GOODS_TOPIC}
+    depends_on:
+      redis:
+        condition: service_healthy
+      database:
+        condition: service_healthy
     ports:
-      - "${REDIS_PORT}:${REDIS_PORT}"
-    volumes:
-      - redis-data:/data
+      - "${SRV_PORT}:${SRV_PORT}"
+    networks:
+      - local
+
+  collector:
+    build:
+      context: .
+      dockerfile: docker/collector.dockerfile
+    environment:
+      COLLECTOR_PACK_SIZE: ${COLLECTOR_PACK_SIZE}
+      NATS_URL: ${NATS_URL}
+      NATS_GOODS_TOPIC: ${NATS_GOODS_TOPIC}
+      CLICKHOUSE_URL: ${CLICKHOUSE_URL}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB}
+      ROOT_USER: ${ROOT_USER}
+      ROOT_PASSWORD: ${ROOT_PASSWORD}
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    networks:
+      - local
 
   database:
     image: postgres
@@ -25,8 +57,8 @@ services:
       PGPORT: ${PG_PORT}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${ROOT_USER} -d ${PG_DBNAME}"]
-      interval: 5s
-      timeout: 5s
+      interval: 2s
+      timeout: 2s
       retries: 5
     volumes:
       - pg_main:/var/lib/postgresql/data
@@ -35,54 +67,62 @@ services:
     networks:
       - local
 
-  # clickhouse:
-  #   image: clickhouse/clickhouse-server:latest
-  #   environment:
-  #     CLICKHOUSE_USER: ${ROOT_USER}
-  #     CLICKHOUSE_PASSWORD: ${ROOT_PASSWORD}
-  #     CLICKHOUSE_DB: ${CLICKHOUSE_DB}
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "wget --spider -q http://localhost:8123 || exit 1"]
-  #     interval: 5s
-  #     timeout: 5s
-  #     retries: 5
-  #   ports:
-  #     - "8123:8123"
-  #     - ${CLICKHOUSE_PORT}:${CLICKHOUSE_PORT}
-  #   ulimits:
-  #     nofile:
-  #       soft: 262144
-  #       hard: 262144
-  #   volumes:
-  #     - clickhouse-data:/var/lib/clickhouse
-  #   networks:
-  #     - local
-
   nats:
     image: nats:latest
     ports:
       - ${NATS_PORT}:${NATS_PORT}
       - "8222:8222"
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "${NATS_PORT}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
     networks:
       - local
 
-  # grafana:
-  #   image: grafana/grafana:latest
-  #   ports:
-  #     - "3000:3000"
-  #   depends_on:
-  #     clickhouse:
-  #       condition: service_healthy
-  #   environment:
-  #     GF_SECURITY_ADMIN_USER: ${ROOT_USER}
-  #     GF_SECURITY_ADMIN_PASSWORD: ${ROOT_PASSWORD}
-  #   volumes:
-  #     - grafana-data:/var/lib/grafana
-  #   networks:
-  #     - local
+  redis:
+    image: redis:latest
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "healthcheck_ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+    volumes:
+      - redis-data:/data
+    networks:
+      - local
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    environment:
+      CLICKHOUSE_USER: ${ROOT_USER}
+      CLICKHOUSE_PASSWORD: ${ROOT_PASSWORD}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8123 || exit 1"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+    ports:
+      - "8123:8123"
+      - ${CLICKHOUSE_PORT}:${CLICKHOUSE_PORT}
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+    networks:
+      - local
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    environment:
+      GF_SECURITY_ADMIN_USER: ${ROOT_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${ROOT_PASSWORD}
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - local

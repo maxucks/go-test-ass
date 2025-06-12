@@ -7,9 +7,9 @@ import (
 type Config struct {
 	Port            int    `env:"SRV_PORT" envDefault:"8000"`
 	DatabaseURL     string `env:"PG_URL,notEmpty"`
-	RedisPort       int    `env:"REDIS_PORT,notEmpty"`
+	RedisURL        string `env:"REDIS_URL,notEmpty"`
 	CacheExpiration int    `env:"CACHE_EXPIRATION,notEmpty"`
-	NatsPort        int    `env:"NATS_PORT,notEmpty"`
+	NatsURL         string `env:"NATS_URL,notEmpty"`
 	NatsGoodsTopic  string `env:"NATS_GOODS_TOPIC,notEmpty"`
 }
 
