@@ -42,6 +42,9 @@ func (c *GoodsController) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	c.cache.ClearGoods(ctx)
+	c.cache.ClearGoodsMetadata(ctx)
+
 	c.pub.PublishGoods(removed)
 
 	com.JSON(w, models.ShortGoods{

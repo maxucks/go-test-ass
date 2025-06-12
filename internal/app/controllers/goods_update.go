@@ -59,6 +59,8 @@ func (c *GoodsController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	c.cache.ClearGoods(ctx)
+
 	c.pub.PublishGoods(goods)
 
 	com.JSON(w, goods)

@@ -24,6 +24,4 @@ type ReprioritizedGoods struct {
 type PaginationMeta struct {
 	Total   int `json:"total"`
 	Removed int `json:"removed"`
-	Limit   int `json:"limit"`
-	Offset  int `json:"offset"`
 }

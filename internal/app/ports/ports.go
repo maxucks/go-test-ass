@@ -5,6 +5,15 @@ import (
 	"test/internal/app/models"
 )
 
+type Cache interface {
+	CacheGoodsMetadata(ctx context.Context, meta models.PaginationMeta) error
+	GetGoodsMetadata(ctx context.Context) (*models.PaginationMeta, error)
+	ClearGoodsMetadata(ctx context.Context) error
+	CacheGoods(ctx context.Context, offset, limit int, goods []*models.Goods) error
+	GetGoods(ctx context.Context, offset, limit int) ([]*models.Goods, error)
+	ClearGoods(ctx context.Context) error
+}
+
 type QuePublisher interface {
 	PublishGoods(goods *models.Goods)
 }

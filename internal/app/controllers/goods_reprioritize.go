@@ -58,5 +58,7 @@ func (c *GoodsController) Reprioritize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	c.cache.ClearGoods(ctx)
+
 	com.JSON(w, reprioritizeResponse{Priorities: goods})
 }

@@ -19,16 +19,16 @@ type goodsEvent struct {
 	EventTime   string `json:"event_time"`
 }
 
-type Publisher struct {
+type NatsPublisher struct {
 	nc    *nats.Conn
 	topic string
 }
 
-func NewPublisher(nc *nats.Conn, topic string) *Publisher {
-	return &Publisher{nc, topic}
+func NewNatsPublisher(nc *nats.Conn, topic string) *NatsPublisher {
+	return &NatsPublisher{nc, topic}
 }
 
-func (p *Publisher) PublishGoods(goods *models.Goods) {
+func (p *NatsPublisher) PublishGoods(goods *models.Goods) {
 	if goods == nil {
 		return
 	}

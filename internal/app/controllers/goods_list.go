@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	com "test/internal/app/common"
@@ -8,8 +9,15 @@ import (
 )
 
 type listResponse struct {
-	Meta  models.PaginationMeta `json:"meta"`
-	Goods []*models.Goods       `json:"goods"`
+	Meta  listResponseMeta `json:"meta"`
+	Goods []*models.Goods  `json:"goods"`
+}
+
+type listResponseMeta struct {
+	Total   int `json:"total"`
+	Removed int `json:"removed"`
+	Offset  int `json:"offset"`
+	Limit   int `json:"limit"`
 }
 
 func (c *GoodsController) List(w http.ResponseWriter, r *http.Request) {
@@ -34,22 +42,45 @@ func (c *GoodsController) List(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	total, removed, err := c.repo.GetPaginationMeta(r.Context())
+	ctx := r.Context()
+
+	meta, err := c.cache.GetGoodsMetadata(ctx)
 	if err != nil {
-		com.Error(w, err)
-		return
+		log.Printf("err reading cache: %s\n", err)
+	}
+	if meta == nil {
+		log.Println("No cache")
+		total, removed, err := c.repo.GetPaginationMeta(r.Context())
+		if err != nil {
+			com.Error(w, err)
+			return
+		}
+		meta = &models.PaginationMeta{
+			Total:   total,
+			Removed: removed,
+		}
+		if err := c.cache.CacheGoodsMetadata(ctx, *meta); err != nil {
+			log.Printf("err caching meta: %s\n", err)
+		}
 	}
 
-	goods, err := c.repo.Get(r.Context(), limit, offset)
+	goods, err := c.cache.GetGoods(ctx, offset, limit)
 	if err != nil {
-		com.Error(w, err)
-		return
+		log.Printf("err reading cache: %s\n", err)
+	}
+	if goods == nil {
+		goods, err = c.repo.Get(ctx, limit, offset)
+		if err != nil {
+			com.Error(w, err)
+			return
+		}
+		c.cache.CacheGoods(ctx, offset, limit, goods)
 	}
 
 	com.JSON(w, listResponse{
-		Meta: models.PaginationMeta{
-			Total:   total,
-			Removed: removed,
+		Meta: listResponseMeta{
+			Total:   meta.Total,
+			Removed: meta.Removed,
 			Limit:   limit,
 			Offset:  offset,
 		},

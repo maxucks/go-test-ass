@@ -34,6 +34,11 @@ func (c *GoodsController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
+
+	c.cache.ClearGoods(ctx)
+	c.cache.ClearGoodsMetadata(ctx)
+
 	c.pub.PublishGoods(goods)
 
 	com.JSON(w, goods)

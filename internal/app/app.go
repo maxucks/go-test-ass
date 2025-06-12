@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/nats-io/nats.go"
+	"github.com/redis/go-redis/v9"
 )
 
 func Run() {
@@ -19,7 +21,7 @@ func Run() {
 		log.Fatalf("failed to load config: %s", err)
 	}
 
-	db, err := sql.Open("postgres", cfg.DB.URL)
+	db, err := sql.Open("postgres", cfg.DatabaseURL)
 	if err != nil {
 		log.Fatal("Failed to open DB:", err)
 	}
@@ -28,16 +30,28 @@ func Run() {
 		log.Fatal("DB ping failed:", err)
 	}
 
-	natsURL := fmt.Sprintf("nats://localhost:%d", cfg.Nats.Port)
-	nc, err := nats.Connect(natsURL)
+	nc, err := nats.Connect(fmt.Sprintf("nats://localhost:%d", cfg.NatsPort))
 	if err != nil {
-		log.Fatalf("failed to establish nats connection: %s", err)
+		log.Fatalf("failed to connect to nats: %s", err)
 	}
 	defer nc.Drain()
 
-	r := router.Setup(cfg, db, nc, cfg.Nats.GoodsTopic)
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("localhost:%d", cfg.RedisPort),
+		Password: "",
+		DB:       0,
+	})
+	defer rdb.Close()
 
-	addr := fmt.Sprintf(":%d", cfg.Srv.Port)
+	ctx := context.Background()
+
+	if _, err := rdb.Ping(ctx).Result(); err != nil {
+		log.Fatalf("failed to connect to redis: %v", err)
+	}
+
+	r := router.Setup(cfg, db, nc, rdb)
+
+	addr := fmt.Sprintf(":%d", cfg.Port)
 	log.Printf("listening at %s", addr)
 
 	if err := http.ListenAndServe(addr, r); err != nil {

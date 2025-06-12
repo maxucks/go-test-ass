@@ -6,8 +6,16 @@ volumes:
   pg_main:
   clickhouse-data:
   grafana-data:
+  redis-data:
 
 services:
+  redis:
+    image: redis:latest
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+    volumes:
+      - redis-data:/data
+
   database:
     image: postgres
     environment:
@@ -27,28 +35,28 @@ services:
     networks:
       - local
 
-  clickhouse:
-    image: clickhouse/clickhouse-server:latest
-    environment:
-      CLICKHOUSE_USER: ${ROOT_USER}
-      CLICKHOUSE_PASSWORD: ${ROOT_PASSWORD}
-      CLICKHOUSE_DB: ${CLICKHOUSE_DB}
-    healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q http://localhost:8123 || exit 1"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    ports:
-      - "8123:8123"
-      - ${CLICKHOUSE_PORT}:${CLICKHOUSE_PORT}
-    ulimits:
-      nofile:
-        soft: 262144
-        hard: 262144
-    volumes:
-      - clickhouse-data:/var/lib/clickhouse
-    networks:
-      - local
+  # clickhouse:
+  #   image: clickhouse/clickhouse-server:latest
+  #   environment:
+  #     CLICKHOUSE_USER: ${ROOT_USER}
+  #     CLICKHOUSE_PASSWORD: ${ROOT_PASSWORD}
+  #     CLICKHOUSE_DB: ${CLICKHOUSE_DB}
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "wget --spider -q http://localhost:8123 || exit 1"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
+  #   ports:
+  #     - "8123:8123"
+  #     - ${CLICKHOUSE_PORT}:${CLICKHOUSE_PORT}
+  #   ulimits:
+  #     nofile:
+  #       soft: 262144
+  #       hard: 262144
+  #   volumes:
+  #     - clickhouse-data:/var/lib/clickhouse
+  #   networks:
+  #     - local
 
   nats:
     image: nats:latest
@@ -60,24 +68,21 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    depends_on:
-      clickhouse:
-        condition: service_healthy
     restart: unless-stopped
     networks:
       - local
 
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    depends_on:
-      clickhouse:
-        condition: service_healthy
-    environment:
-      GF_SECURITY_ADMIN_USER: ${ROOT_USER}
-      GF_SECURITY_ADMIN_PASSWORD: ${ROOT_PASSWORD}
-    volumes:
-      - grafana-data:/var/lib/grafana
-    networks:
-      - local
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     clickhouse:
+  #       condition: service_healthy
+  #   environment:
+  #     GF_SECURITY_ADMIN_USER: ${ROOT_USER}
+  #     GF_SECURITY_ADMIN_PASSWORD: ${ROOT_PASSWORD}
+  #   volumes:
+  #     - grafana-data:/var/lib/grafana
+  #   networks:
+  #     - local

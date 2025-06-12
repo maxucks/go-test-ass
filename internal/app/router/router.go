@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/nats-io/nats.go"
+	"github.com/redis/go-redis/v9"
 )
 
 type healthResponse struct {
@@ -27,10 +28,11 @@ type Controllers struct {
 	goods *controllers.GoodsController
 }
 
-func Setup(cfg *config.Config, db *sql.DB, nc *nats.Conn, topic string) *chi.Mux {
+func Setup(cfg *config.Config, db *sql.DB, nc *nats.Conn, rdb *redis.Client) *chi.Mux {
 	repo := repos.NewGoods(db)
-	pub := managers.NewPublisher(nc, topic)
-	controller := controllers.NewGoods(repo, pub)
+	cache := managers.NewRedisCache(rdb, managers.WithExpiration(cfg.CacheExpiration))
+	pub := managers.NewNatsPublisher(nc, cfg.NatsGoodsTopic)
+	controller := controllers.NewGoods(repo, pub, cache)
 
 	r := chi.NewRouter()
 
