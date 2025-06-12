@@ -1,12 +1,12 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE projects (
+CREATE TABLE IF NOT EXISTS projects (
   id int PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   name varchar(100) NOT NULL,
   created_at timestamp NOT NULL DEFAULT now()
 );
 
-CREATE TABLE goods (
+CREATE TABLE IF NOT EXISTS goods (
   id int PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   project_id int REFERENCES projects(id)
     ON DELETE SET NULL
@@ -18,11 +18,14 @@ CREATE TABLE goods (
   created_at timestamp NOT NULL DEFAULT now()
 );
 
+CREATE INDEX idx_goods_project_id ON goods(project_id);
+CREATE INDEX idx_goods_name ON goods(name);
+
 INSERT INTO projects (name) VALUES ('Первая запись');
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE goods;
-DROP TABLE projects;
+DROP TABLE IF EXISTS goods;
+DROP TABLE IF EXISTS projects;
 -- +goose StatementEnd

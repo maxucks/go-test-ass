@@ -1,6 +1,10 @@
 .PHONY: new_migration run run_app run_collector
+
 new_migration:
-	goose -s create -dir migrations $(MIGRATION_NAME) sql
+	goose -s create -dir migrations/postgres $(MIGRATION_NAME) sql
+
+new_clickhouse_migration:
+	goose -s create -dir migrations/clickhouse $(MIGRATION_NAME) sql
 
 run:
 	docker compose --env-file .env up --build
